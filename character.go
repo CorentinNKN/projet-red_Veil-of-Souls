@@ -73,3 +73,27 @@ func accesInventory(c *Character) {
 		}
 	}
 }
+
+// Vérifie si le joueur est mort
+func isDead(c *Character) {
+	if c.PVActuels <= 0 {
+		fmt.Println("💀 Vous êtes mort...")
+		c.PVActuels = c.PVMax / 2
+		fmt.Printf("Vous êtes ressuscité avec %d PV !\n", c.PVActuels)
+	}
+}
+
+// Interface du marchand
+func marchand(c *Character) {
+	fmt.Println("----- Marchand -----")
+	fmt.Println("1. Potion de vie (gratuit)")
+	fmt.Println("0. Retour")
+
+	var choix int
+	fmt.Scan(&choix)
+
+	if choix == 1 {
+		c.Inventaire = append(c.Inventaire, "Potion de vie")
+		fmt.Println("Vous avez acheté une Potion de vie !")
+	}
+}
