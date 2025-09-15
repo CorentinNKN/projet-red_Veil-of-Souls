@@ -1,4 +1,4 @@
-package main
+package mapgame
 
 import (
 	"fmt"

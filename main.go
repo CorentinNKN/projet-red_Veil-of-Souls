@@ -2,46 +2,44 @@ package main
 
 import (
 	"fmt"
-	"veil_of_souls/character"
-	"veil_of_souls/intro"
-	"veil_of_souls/inventory"
-	"veil_of_souls/merchant"
-	"veil_of_souls/utils"
+	"main/character"
+	"main/intro"
+	"main/inventory"
+	"main/mapgame"
+	"main/merchant"
+	"main/utils"
 )
 
 func main() {
-	// Page d'intro
 	intro.ShowIntro()
 
-	// Création du personnage
-	c1 := character.InitCharacter("TonNom", "Elfe", 1, 100, 40, []string{"Potion de vie", "Potion de vie", "Potion de vie"})
+	// Initialisation du personnage
+	c1 := character.InitCharacter("TonNom", "Elfe", 1, 100, 40, []string{"Potion", "Potion", "Potion"})
 
-	// Boucle du menu principal
 	for {
-		fmt.Println("\n----- Menu Principal -----")
+		fmt.Println("\n--- Menu Principal ---")
 		fmt.Println("1. Afficher les informations du personnage")
-		fmt.Println("2. Accéder au contenu de l’inventaire")
-		fmt.Println("3. Marchand")
-		fmt.Println("4. Quitter")
+		fmt.Println("2. Accéder à l’inventaire")
+		fmt.Println("3. Accéder au marchand")
+		fmt.Println("4. Explorer la carte")
+		fmt.Println("5. Quitter")
 
-		var choix int
-		fmt.Print("Votre choix : ")
-		fmt.Scan(&choix)
+		choice := utils.AskChoice()
 
-		switch choix {
-		case 1:
+		switch choice {
+		case "1":
 			character.DisplayInfo(&c1)
-		case 2:
+		case "2":
 			inventory.AccessInventory(&c1)
-		case 3:
-			merchant.Marchand(&c1)
-		case 4:
-			fmt.Println("Au revoir !")
+		case "3":
+			merchant.AccessMerchant(&c1)
+		case "4":
+			mapgame.StartExploration(&c1)
+		case "5":
+			fmt.Println("Merci d’avoir joué à Veil of Souls !")
 			return
 		default:
-			fmt.Println("Choix invalide.")
+			fmt.Println("Choix invalide")
 		}
-
-		utils.IsDead(&c1)
 	}
 }
