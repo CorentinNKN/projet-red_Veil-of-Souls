@@ -3,98 +3,116 @@ package mapgame
 import (
 	"fmt"
 	"main/character"
+	"main/utils"
 	"math/rand"
-	"time"
 )
 
-// Dimensions de la map
-const (
-	width  = 10
-	height = 6
-)
-
-type Map struct {
-	grid    [][]string
-	playerX int
-	playerY int
+var rooms = [][][]string{
+	{ // Salle 1
+		{".", ".", ".", "."},
+		{".", "😈", ".", "."},
+		{".", ".", ".", "😈"},
+		{".", ".", ".", "."},
+	},
+	{ // Salle 2 (plus difficile)
+		{"😈", ".", ".", "😈"},
+		{".", "😈", ".", "."},
+		{".", ".", ".", "."},
+		{"😈", ".", "😈", "."},
+	},
+	{ // Salle 3 (boss léger)
+		{".", ".", ".", "."},
+		{".", "😈", "😈", "."},
+		{".", "😈", "👹", "😈"},
+		{".", ".", ".", "."},
+	},
 }
 
-// Crée une map avec joueur et ennemis
-func InitMap() *Map {
-	m := &Map{
-		grid:    make([][]string, height),
-		playerX: width / 2,
-		playerY: height / 2,
+// ExploreRooms : parcourt les salles
+func ExploreRooms(c *character.Character) {
+	for i, room := range rooms {
+		fmt.Printf("\n=== Salle %d ===\n", i+1)
+		playRoom(c, room)
+		// si après la salle le joueur a 0 ou moins => IsDead a été appelé dans playRoom, continue
 	}
-
-	for i := range m.grid {
-		m.grid[i] = make([]string, width)
-		for j := range m.grid[i] {
-			m.grid[i][j] = "⬜" // case vide
-		}
-	}
-
-	// Place joueur
-	m.grid[m.playerY][m.playerX] = "🥷"
-
-	// Place ennemis
-	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < 5; i++ {
-		ex := rand.Intn(width)
-		ey := rand.Intn(height)
-		if ex != m.playerX || ey != m.playerY {
-			m.grid[ey][ex] = "😈"
-		}
-	}
-
-	return m
+	fmt.Println("✔ Vous avez terminé toutes les salles disponibles.")
 }
 
-// Affiche la map
-func (m *Map) Display() {
-	fmt.Println("===== MAP =====")
-	for _, row := range m.grid {
-		for _, cell := range row {
-			fmt.Print(cell, " ")
+func playRoom(c *character.Character, grid [][]string) {
+	playerX, playerY := 0, 0
+
+	for {
+		displayMap(playerX, playerY, grid)
+		fmt.Println("Déplacez-vous (z: haut, s: bas, q: gauche, d: droite, r: quitter la salle)")
+		choice := utils.AskChoice()
+
+		switch choice {
+		case "z":
+			if playerX > 0 {
+				playerX--
+			}
+		case "s":
+			if playerX < len(grid)-1 {
+				playerX++
+			}
+		case "q":
+			if playerY > 0 {
+				playerY--
+			}
+		case "d":
+			if playerY < len(grid[0])-1 {
+				playerY++
+			}
+		case "r":
+			return
+		default:
+			fmt.Println("Mauvais choix.")
+		}
+
+		cell := grid[playerX][playerY]
+		if cell == "😈" || cell == "👹" {
+			// combat simplifié : on subit des dégâts aléatoires, ennemi supprimé après
+			fmt.Printf("⚔️ Un ennemi %s apparaît !\n", cell)
+			damage := rand.Intn(20) + 10
+			c.CurrentHP -= damage
+			fmt.Printf("Vous subissez %d PV de dégâts (%d/%d).\n", damage, c.CurrentHP, c.MaxHP)
+			// vérifier mort (IsDead gère la résurrection)
+			if character.IsDead(c) {
+				fmt.Println("⚡ Vous avez été ressuscité à 50% de vos PV.")
+			}
+			// retirer l'ennemi
+			grid[playerX][playerY] = "."
+		}
+
+		// vérifier si la salle est nettoyée
+		if isRoomCleared(grid) {
+			fmt.Println("✔ Salle nettoyée !")
+			return
+		}
+	}
+}
+
+func displayMap(playerX, playerY int, grid [][]string) {
+	fmt.Println("\n--- Carte ---")
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid[i]); j++ {
+			if i == playerX && j == playerY {
+				fmt.Print("🥷 ")
+			} else {
+				fmt.Print(grid[i][j] + " ")
+			}
 		}
 		fmt.Println()
 	}
-	fmt.Println("================")
 }
 
-// Déplace le joueur
-func (m *Map) Move(dir string) {
-	// efface l'ancienne position
-	m.grid[m.playerY][m.playerX] = "⬜"
-
-	switch dir {
-	case "z":
-		if m.playerY > 0 {
-			m.playerY--
-		}
-	case "s":
-		if m.playerY < height-1 {
-			m.playerY++
-		}
-	case "q":
-		if m.playerX > 0 {
-			m.playerX--
-		}
-	case "d":
-		if m.playerX < width-1 {
-			m.playerX++
+func isRoomCleared(grid [][]string) bool {
+	for i := range grid {
+		for j := range grid[i] {
+			if grid[i][j] == "😈" || grid[i][j] == "👹" {
+				return false
+			}
 		}
 	}
-
-	// Vérifie ce qu'il y a sur la case
-	if m.grid[m.playerY][m.playerX] == "😈" {
-		fmt.Println("⚔️  Un combat commence contre un ennemi ! 😈")
-	}
-
-	// place le joueur
-	m.grid[m.playerY][m.playerX] = "🥷"
-}
-
-func StartExploration(c *character.Character) {
-	fmt.Println("Exploration de la carte... (fonctionnalité à implémenter)")
+	return true
 }
