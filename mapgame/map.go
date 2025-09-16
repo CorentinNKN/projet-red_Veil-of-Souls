@@ -2,6 +2,7 @@ package mapgame
 
 import (
 	"fmt"
+	"main/character"
 	"math/rand"
 	"time"
 )
@@ -92,4 +93,8 @@ func (m *Map) Move(dir string) {
 
 	// place le joueur
 	m.grid[m.playerY][m.playerX] = "🥷"
+}
+
+func StartExploration(c *character.Character) {
+	fmt.Println("Exploration de la carte... (fonctionnalité à implémenter)")
 }
