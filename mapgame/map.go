@@ -7,35 +7,89 @@ import (
 	"math/rand"
 )
 
-var rooms = [][][]string{
-	{ // Salle 1
-		{".", ".", ".", "."},
-		{".", "😈", ".", "."},
-		{".", ".", ".", "😈"},
-		{".", ".", ".", "."},
-	},
-	{ // Salle 2 (plus difficile)
-		{"😈", ".", ".", "😈"},
-		{".", "😈", ".", "."},
-		{".", ".", ".", "."},
-		{"😈", ".", "😈", "."},
-	},
-	{ // Salle 3 (boss léger)
-		{".", ".", ".", "."},
-		{".", "😈", "😈", "."},
-		{".", "😈", "👹", "😈"},
-		{".", ".", ".", "."},
-	},
+type Room struct {
+	Name        string
+	Grid        [][]string
+	Connections map[string]*Room
 }
 
-// ExploreRooms : parcourt les salles
-func ExploreRooms(c *character.Character) {
-	for i, room := range rooms {
-		fmt.Printf("\n=== Salle %d ===\n", i+1)
-		playRoom(c, room)
-		// si après la salle le joueur a 0 ou moins => IsDead a été appelé dans playRoom, continue
+// Création des salles
+func initRooms() *Room {
+	s1 := &Room{
+		Name: "Salle 1 (entrée)",
+		Grid: [][]string{
+			{".", ".", ".", "."},
+			{".", "😈", ".", "."},
+			{".", ".", ".", "😈"},
+			{".", ".", ".", "."},
+		},
+		Connections: make(map[string]*Room),
 	}
-	fmt.Println("✔ Vous avez terminé toutes les salles disponibles.")
+
+	s2 := &Room{
+		Name: "Salle 2 (plus difficile)",
+		Grid: [][]string{
+			{"😈", ".", ".", "😈"},
+			{".", "😈", ".", "."},
+			{".", ".", ".", "."},
+			{"😈", ".", "😈", "."},
+		},
+		Connections: make(map[string]*Room),
+	}
+
+	s3 := &Room{
+		Name: "Salle 3 (boss léger)",
+		Grid: [][]string{
+			{".", ".", ".", "."},
+			{".", "😈", "😈", "."},
+			{".", "😈", "👹", "😈"},
+			{".", ".", ".", "."},
+		},
+		Connections: make(map[string]*Room),
+	}
+
+	// Relier les salles
+	s1.Connections["nord"] = s2
+	s2.Connections["sud"] = s1
+	s2.Connections["est"] = s3
+	s3.Connections["ouest"] = s2
+
+	return s1 // salle de départ
+}
+
+// ExploreDungeon : parcourt le donjon
+func ExploreDungeon(c *character.Character) {
+	currentRoom := initRooms()
+
+	for {
+		fmt.Printf("\n=== %s ===\n", currentRoom.Name)
+		playRoom(c, currentRoom.Grid)
+
+		// vérifier si le joueur est mort définitif
+		if c.CurrentHP <= 0 {
+			fmt.Println("💀 Vous êtes mort. Fin du jeu.")
+			return
+		}
+
+		// Choisir sortie
+		if len(currentRoom.Connections) == 0 {
+			fmt.Println("✔ Vous avez nettoyé la dernière salle, bravo !")
+			return
+		}
+
+		fmt.Println("\nSorties disponibles :")
+		for dir := range currentRoom.Connections {
+			fmt.Println("-", dir)
+		}
+		fmt.Print("Choisissez une direction : ")
+		choice := utils.AskChoice()
+
+		if next, ok := currentRoom.Connections[choice]; ok {
+			currentRoom = next
+		} else {
+			fmt.Println("❌ Direction invalide, vous restez dans la salle.")
+		}
+	}
 }
 
 func playRoom(c *character.Character, grid [][]string) {
@@ -71,20 +125,18 @@ func playRoom(c *character.Character, grid [][]string) {
 
 		cell := grid[playerX][playerY]
 		if cell == "😈" || cell == "👹" {
-			// combat simplifié : on subit des dégâts aléatoires, ennemi supprimé après
 			fmt.Printf("⚔️ Un ennemi %s apparaît !\n", cell)
 			damage := rand.Intn(20) + 10
 			c.CurrentHP -= damage
 			fmt.Printf("Vous subissez %d PV de dégâts (%d/%d).\n", damage, c.CurrentHP, c.MaxHP)
-			// vérifier mort (IsDead gère la résurrection)
+
 			if character.IsDead(c) {
 				fmt.Println("⚡ Vous avez été ressuscité à 50% de vos PV.")
 			}
-			// retirer l'ennemi
+
 			grid[playerX][playerY] = "."
 		}
 
-		// vérifier si la salle est nettoyée
 		if isRoomCleared(grid) {
 			fmt.Println("✔ Salle nettoyée !")
 			return
