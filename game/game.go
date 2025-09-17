@@ -20,7 +20,7 @@ func StartGame() {
 		fmt.Println("2. Accéder à l'inventaire")
 		fmt.Println("3. Accéder au marchand")
 		fmt.Println("4. Accéder au forgeron")
-		fmt.Println("5. Explorer les salles")
+		fmt.Println("5. Explorer le donjon")
 		fmt.Println("6. Combat d'entraînement")
 		fmt.Println("7. Quitter")
 
@@ -36,7 +36,7 @@ func StartGame() {
 		case "4":
 			blacksmith.AccessBlacksmith(&player)
 		case "5":
-			mapgame.ExploreRooms(&player)
+			mapgame.ExploreDungeon(&player) // ✅ correction ici
 		case "6":
 			combat.TrainingCombat(&player)
 		case "7":
