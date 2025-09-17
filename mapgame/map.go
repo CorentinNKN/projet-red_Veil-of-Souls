@@ -13,15 +13,18 @@ type Room struct {
 	Connections map[string]*Room
 }
 
-// Création des salles
 func initRooms() *Room {
 	s1 := &Room{
 		Name: "Salle 1 (entrée)",
 		Grid: [][]string{
-			{".", ".", ".", "."},
-			{".", "😈", ".", "."},
-			{".", ".", ".", "😈"},
-			{".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", "😈", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", "😈", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", "😈", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
 		},
 		Connections: make(map[string]*Room),
 	}
@@ -29,10 +32,14 @@ func initRooms() *Room {
 	s2 := &Room{
 		Name: "Salle 2 (plus difficile)",
 		Grid: [][]string{
-			{"😈", ".", ".", "😈"},
-			{".", "😈", ".", "."},
-			{".", ".", ".", "."},
-			{"😈", ".", "😈", "."},
+			{"😈", ".", ".", ".", ".", ".", ".", "😈"},
+			{".", ".", "😈", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", "😈", ".", ".", ".", "."},
+			{"😈", ".", ".", ".", "😈", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{"😈", ".", ".", ".", ".", ".", ".", "😈"},
 		},
 		Connections: make(map[string]*Room),
 	}
@@ -40,10 +47,14 @@ func initRooms() *Room {
 	s3 := &Room{
 		Name: "Salle 3 (boss léger)",
 		Grid: [][]string{
-			{".", ".", ".", "."},
-			{".", "😈", "😈", "."},
-			{".", "😈", "👹", "😈"},
-			{".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", "😈", ".", ".", ".", ".", ".", "."},
+			{".", ".", "😈", "👹", "😈", ".", ".", "."},
+			{".", ".", ".", "😈", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
+			{".", ".", ".", ".", ".", ".", ".", "."},
 		},
 		Connections: make(map[string]*Room),
 	}
@@ -54,7 +65,7 @@ func initRooms() *Room {
 	s2.Connections["est"] = s3
 	s3.Connections["ouest"] = s2
 
-	return s1 // salle de départ
+	return s1
 }
 
 // ExploreDungeon : parcourt le donjon
@@ -123,9 +134,12 @@ func playRoom(c *character.Character, grid [][]string) {
 			fmt.Println("Mauvais choix.")
 		}
 
+		// Vérifier ce qu’il y a dans la case
 		cell := grid[playerX][playerY]
 		if cell == "😈" || cell == "👹" {
 			fmt.Printf("⚔️ Un ennemi %s apparaît !\n", cell)
+
+			// Dégâts aléatoires
 			damage := rand.Intn(20) + 10
 			c.CurrentHP -= damage
 			fmt.Printf("Vous subissez %d PV de dégâts (%d/%d).\n", damage, c.CurrentHP, c.MaxHP)
@@ -134,9 +148,11 @@ func playRoom(c *character.Character, grid [][]string) {
 				fmt.Println("⚡ Vous avez été ressuscité à 50% de vos PV.")
 			}
 
+			// Ennemi battu → case vidée
 			grid[playerX][playerY] = "."
 		}
 
+		// ✅ Si plus aucun ennemi → sortie automatique
 		if isRoomCleared(grid) {
 			fmt.Println("✔ Salle nettoyée !")
 			return
