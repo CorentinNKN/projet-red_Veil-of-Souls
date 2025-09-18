@@ -72,6 +72,8 @@ d → droite
 
 i → accéder à l’inventaire
 
+r → quitter la salle
+
 Combat :
 
 1 → attaquer
