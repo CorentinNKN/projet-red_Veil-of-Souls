@@ -22,7 +22,7 @@ Veil of Souls est un RPG console dans lequel le joueur :
 
 
 
-## 📂 Structure du projet
+##  Structure du projet
 
 ```
 veilofsouls/
@@ -43,14 +43,14 @@ veilofsouls/
 
 
 
-## 🛠️ Prérequis / Installation
+## 🛠 Prérequis / Installation
 
 - Go version **1.22** ou plus recommandée
 - Git (pour cloner le dépôt)
 
 
 
-## 🚀 Lancer le jeu
+##  Lancer le jeu
 
 ```bash
 git clone https://github.com/CorentinNKN/projet-red_Veil-of-Souls.git
@@ -60,7 +60,7 @@ go run main.go
 
 
 
-## 🎮 Commandes du jeu
+##  Commandes du jeu
 
 ### Menus principaux
 - Entrer le numéro correspondant au choix voulu
@@ -102,7 +102,7 @@ go run main.go
 
 
 
-## ✍️ Auteurs
+##  Auteurs
 
 - Corentin NOKAYA 
 - Antoine MASSOUH
