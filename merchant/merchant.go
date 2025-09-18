@@ -6,61 +6,53 @@ import (
 	"main/utils"
 )
 
-// AccessMerchant ouvre la boutique
+// AccessMerchant : menu marchand
 func AccessMerchant(c *character.Character) {
 	for {
 		fmt.Println("\n=== Marchand ===")
-		fmt.Printf("Or disponible : %d\n", c.Gold)
-		fmt.Println("Articles en vente :")
-		fmt.Println("1. Potion de vie (3 or)")
-		fmt.Println("2. Potion de poison (6 or)")
-		fmt.Println("3. Livre de sort : Boule de feu (25 or)")
-		fmt.Println("4. Ressources (Fourrure, Cuir, Plume...) (5 or)")
-		fmt.Println("5. Augmentation inventaire (+10 slots, max 3) (30 or)")
-		fmt.Println("6. Quitter le marchand")
+		fmt.Printf("💰 Or disponible : %d\n", c.Gold)
+		fmt.Println("1. Acheter une potion de vie (20 or)")
+		fmt.Println("2. Acheter une potion de poison (15 or)")
+		fmt.Println("3. Vendre un objet (10 or)")
+		fmt.Println("4. Quitter")
 
 		choice := utils.AskChoice()
-
 		switch choice {
 		case "1":
-			buyItem(c, "Potion de vie", 3)
-		case "2":
-			buyItem(c, "Potion de poison", 6)
-		case "3":
-			if c.Gold < 25 {
+			if c.Gold >= 20 {
+				if character.AddItem(c, "Potion de vie") {
+					c.Gold -= 20
+				}
+			} else {
 				fmt.Println("❌ Pas assez d’or.")
+			}
+		case "2":
+			if c.Gold >= 15 {
+				if character.AddItem(c, "Potion de poison") {
+					c.Gold -= 15
+				}
+			} else {
+				fmt.Println("❌ Pas assez d’or.")
+			}
+		case "3":
+			if len(c.Inventory) == 0 {
+				fmt.Println("❌ Inventaire vide, rien à vendre.")
 				continue
 			}
-			if character.LearnSpell(c, "Boule de feu") {
-				c.Gold -= 25
+			fmt.Println("Votre inventaire :", c.Inventory)
+			fmt.Print("Quel objet voulez-vous vendre ? ")
+			item := utils.AskChoice()
+			if character.RemoveItem(c, item) {
+				c.Gold += 10
+				fmt.Printf("💰 Vous vendez %s et gagnez 10 or.\n", item)
+			} else {
+				fmt.Println("❌ Objet introuvable.")
 			}
 		case "4":
-			fmt.Println("Quelle ressource voulez-vous acheter ? (Fourrure, Cuir, Plume...)")
-			res := utils.AskChoice()
-			buyItem(c, res, 5)
-		case "5":
-			if c.Gold < 30 {
-				fmt.Println("❌ Pas assez d’or.")
-				continue
-			}
-			if character.UpgradeInventory(c) {
-				c.Gold -= 30
-			}
-		case "6":
+			fmt.Println("Vous quittez le marchand.")
 			return
 		default:
 			fmt.Println("Choix invalide.")
 		}
-	}
-}
-
-// --- Aides internes ---
-func buyItem(c *character.Character, item string, cost int) {
-	if c.Gold < cost {
-		fmt.Println("❌ Pas assez d’or.")
-		return
-	}
-	if character.AddItem(c, item) {
-		c.Gold -= cost
 	}
 }

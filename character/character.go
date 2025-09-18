@@ -234,14 +234,27 @@ func RemoveItem(c *Character, item string) bool {
 
 func GainExp(c *Character, exp int) {
 	c.Exp += exp
-	// Level up every 100 exp points
-	if c.Exp >= c.Level*100 {
+	fmt.Printf("🔹 Vous gagnez %d XP (%d/%d)\n", exp, c.Exp, c.Level*100)
+
+	// Vérifie si on monte de niveau
+	for c.Exp >= c.Level*100 {
+		c.Exp -= c.Level * 100
 		c.Level++
 		c.MaxHP += 10
 		c.CurrentHP = c.MaxHP
 		c.MaxMana += 5
 		c.CurrentMana = c.MaxMana
-		fmt.Printf("Level up! You are now level %d\n", c.Level)
+		fmt.Printf("🎉 Niveau %d atteint ! PV=%d Mana=%d\n", c.Level, c.MaxHP, c.MaxMana)
+
+		// Apprentissage de sorts selon le niveau
+		switch c.Level {
+		case 3:
+			LearnSpell(c, "Boule de feu")
+		case 5:
+			LearnSpell(c, "Éclair")
+		case 8:
+			LearnSpell(c, "Explosion")
+		}
 	}
 }
 

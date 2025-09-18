@@ -3,8 +3,10 @@ package game
 import (
 	"encoding/json"
 	"fmt"
+	"main/blacksmith"
 	"main/character"
 	"main/inventory"
+	"main/merchant"
 	"main/utils"
 	"math/rand"
 	"os"
@@ -26,8 +28,10 @@ func StartGame() {
 		fmt.Println("\n--- Menu Principal ---")
 		fmt.Println("1. Afficher les informations du personnage")
 		fmt.Println("2. Accéder à l'inventaire")
-		fmt.Println("3. Explorer le donjon")
-		fmt.Println("4. Quitter")
+		fmt.Println("3. Accéder au marchand")
+		fmt.Println("4. Accéder au forgeron")
+		fmt.Println("5. Explorer le donjon")
+		fmt.Println("6. Quitter")
 
 		choice := utils.AskChoice()
 		switch choice {
@@ -36,8 +40,12 @@ func StartGame() {
 		case "2":
 			inventory.AccessInventory(&player)
 		case "3":
-			ExploreDungeon(&player)
+			merchant.AccessMerchant(&player)
 		case "4":
+			blacksmith.AccessBlacksmith(&player)
+		case "5":
+			ExploreDungeon(&player)
+		case "6":
 			fmt.Println("Merci d’avoir joué à Veil of Souls !")
 			return
 		default:
@@ -148,6 +156,65 @@ func ExploreDungeon(c *character.Character) {
 }
 
 // --- Jouer une salle ---
+func fight(c *character.Character, enemy string) bool {
+	enemyHP := 30
+	if enemy == "👹" {
+		enemyHP = 60
+	}
+
+	fmt.Printf("⚔️ Combat engagé contre %s !\n", enemy)
+	for c.CurrentHP > 0 && enemyHP > 0 {
+		fmt.Println("\n--- Votre tour ---")
+		fmt.Println("1. Attaquer")
+		fmt.Println("2. Utiliser un sort")
+		fmt.Println("3. Utiliser une potion")
+		fmt.Println("4. Fuir")
+
+		choice := utils.AskChoice()
+		switch choice {
+		case "1":
+			damage := 10
+			enemyHP -= damage
+			fmt.Printf("🥷 Vous attaquez et infligez %d dégâts (%d PV restants).\n", damage, enemyHP)
+		case "2":
+			if len(c.Skills) == 0 {
+				fmt.Println("❌ Aucun sort disponible.")
+			} else {
+				fmt.Println("Choisissez un sort :")
+				for i, s := range c.Skills {
+					fmt.Printf("%d. %s\n", i+1, s)
+				}
+				_ = utils.AskChoice()
+				// (simplifié : applique dégâts selon sort)
+				damage := 15
+				enemyHP -= damage
+				fmt.Printf("🔥 Vous lancez un sort et infligez %d dégâts (%d PV restants).\n", damage, enemyHP)
+			}
+		case "3":
+			character.UsePotion(c)
+		case "4":
+			fmt.Println("🏃 Vous fuyez le combat !")
+			return false
+		}
+
+		// Vérifier si ennemi mort
+		if enemyHP <= 0 {
+			fmt.Printf("✅ Vous avez vaincu %s !\n", enemy)
+			character.GainExp(c, 20)
+			return true
+		}
+
+		// Tour de l’ennemi
+		damage := 8 + (rand.Intn(5))
+		c.CurrentHP -= damage
+		fmt.Printf("💥 L’ennemi attaque et inflige %d dégâts (%d/%d PV).\n", damage, c.CurrentHP, c.MaxHP)
+		if character.IsDead(c) {
+			return false
+		}
+	}
+	return true
+}
+
 func playRoom(c *character.Character, room *Room) {
 	grid := room.Grid
 	playerX, playerY := 0, 0
@@ -204,7 +271,7 @@ func playRoom(c *character.Character, room *Room) {
 	}
 }
 
-// --- Affichage ---
+// Affichage de la carte
 func displayMap(playerX, playerY int, grid [][]string) {
 	fmt.Println("\n--- Carte ---")
 	for i := 0; i < len(grid); i++ {
@@ -231,7 +298,7 @@ func isRoomCleared(grid [][]string) bool {
 	return true
 }
 
-// --- Sauvegarde simple ---
+// Sauvegarde simple
 type SaveData struct {
 	RoomName string `json:"room_name"`
 }
