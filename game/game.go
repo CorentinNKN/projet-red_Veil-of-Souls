@@ -19,7 +19,7 @@ type Room struct {
 	Connections map[string]*Room
 	IsFinal     bool
 }
-
+ // démarrage du jeu 
 func StartGame() {
 	fmt.Println("=== Démarrage du jeu ===")
 	player := character.CharacterCreation()
@@ -110,7 +110,7 @@ func generateRoom(level int) [][]string {
 	return grid
 }
 
-// --- Exploration ---
+// Exploration du dungeon
 func ExploreDungeon(c *character.Character) {
 	currentRoom := LoadGame()
 	if currentRoom == nil {
@@ -155,7 +155,7 @@ func ExploreDungeon(c *character.Character) {
 	}
 }
 
-// --- Jouer une salle ---
+// Jouer une salle 
 func fight(c *character.Character, enemy string) bool {
 	enemyHP := 30
 	if enemy == "👹" {

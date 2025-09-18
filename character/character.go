@@ -8,14 +8,14 @@ import (
 	"unicode"
 )
 
-// Equipment représente les emplacements d'équipement du personnage
+// Equipment : slots d’équipement du joueur
 type Equipment struct {
 	Head  string
 	Torso string
 	Feet  string
 }
 
-// Character contient toutes les infos du joueur
+// Character : toutes les infos du personnage
 type Character struct {
 	Name                 string
 	Class                string
@@ -26,7 +26,7 @@ type Character struct {
 	CurrentMana          int
 	Inventory            []string
 	InventoryCapacity    int
-	InventoryUpgradeUses int // nombre de fois qu'on a augmenté l'inventaire (max 3)
+	InventoryUpgradeUses int // nb max d’augmentations d’inventaire (3 fois)
 	Gold                 int
 	Skills               []string
 	Equipment            Equipment
@@ -35,24 +35,24 @@ type Character struct {
 	Initiative           int
 }
 
-// CharacterCreation : crée un personnage en demandant nom + classe à l'utilisateur
+// Création du personnage
 func CharacterCreation() Character {
 	fmt.Println("=== Création du personnage ===")
 	var name string
 
-	// Nom : uniquement des lettres, normalisé (Majuscule première lettre)
+	// Demande un nom valide (lettres uniquement)
 	for {
 		fmt.Print("Entrez le nom du personnage (lettres uniquement) : ")
 		input := utils.AskChoice()
 		input = strings.TrimSpace(input)
 		if validName(input) {
-			name = normalizeName(input)
+			name = normalizeName(input) // Nom propre (ex: "Jean Dupont")
 			break
 		}
 		fmt.Println("Nom invalide : n'utilisez que des lettres.")
 	}
 
-	// Classe : Humain, Elfe, Nain
+	// Choix de la classe
 	fmt.Println("Choisissez une classe :")
 	fmt.Println("1. Humain (100 PV max)")
 	fmt.Println("2. Elfe  (80 PV max)")
@@ -79,22 +79,28 @@ func CharacterCreation() Character {
 		break
 	}
 
-	// Initialisation
+	// Statistiques de base
 	level := 1
-	currentHP := maxHP / 2 // spawn à 50%
+	currentHP := maxHP / 2 // spawn à 50% PV
 	maxMana := maxHP / 4
 	if maxMana < 10 {
 		maxMana = 10
 	}
 	currentMana := maxMana
 
+	// Inventaire par défaut
 	inventory := []string{"Potion de vie", "Potion de vie", "Potion de vie"}
+
+	// Expérience et or
 	exp := 0
 	expMax := 100
 	gold := 100
+
+	// Sort de base
 	skills := []string{"Coup de poing"}
 	initiative := 10
 
+	// Création du personnage
 	c := Character{
 		Name:                 name,
 		Class:                class,
@@ -119,7 +125,7 @@ func CharacterCreation() Character {
 	return c
 }
 
-// DisplayInfo affiche les infos principales du personnage
+// Affichage
 func DisplayInfo(c *Character) {
 	fmt.Println("\n=== Informations du personnage ===")
 	fmt.Printf("Nom : %s\n", c.Name)
@@ -130,12 +136,13 @@ func DisplayInfo(c *Character) {
 	fmt.Printf("Exp : %d / %d\n", c.Exp, c.ExpMax)
 	fmt.Printf("Or : %d\n", c.Gold)
 	fmt.Printf("Inventaire (%d/%d) : %v\n", len(c.Inventory), c.InventoryCapacity, c.Inventory)
-	fmt.Printf("Equipement : Tête=%s Torse=%s Pieds=%s\n", emptyOr(c.Equipment.Head), emptyOr(c.Equipment.Torso), emptyOr(c.Equipment.Feet))
+	fmt.Printf("Equipement : Tête=%s Torse=%s Pieds=%s\n",
+		emptyOr(c.Equipment.Head), emptyOr(c.Equipment.Torso), emptyOr(c.Equipment.Feet))
 	fmt.Printf("Sorts appris : %v\n", c.Skills)
 	fmt.Printf("Initiative : %d\n", c.Initiative)
 }
 
-// IsDead vérifie si le joueur est à 0 PV ou moins
+// Mort et résurrection
 func IsDead(c *Character) bool {
 	if c.CurrentHP <= 0 {
 		c.CurrentHP = c.MaxHP / 2
@@ -148,7 +155,7 @@ func IsDead(c *Character) bool {
 	return false
 }
 
-// UsePotion : potion de vie +50 PV
+// Potions
 func UsePotion(c *Character) bool {
 	for i, item := range c.Inventory {
 		if strings.ToLower(item) == "potion de vie" || strings.ToLower(item) == "potion" {
@@ -166,7 +173,6 @@ func UsePotion(c *Character) bool {
 	return false
 }
 
-// UsePoisonPot : inflige 10 dégâts/s pendant 3s
 func UsePoisonPot(c *Character) bool {
 	for i, item := range c.Inventory {
 		if strings.ToLower(item) == "potion de poison" || strings.ToLower(item) == "poison" {
@@ -190,8 +196,7 @@ func UsePoisonPot(c *Character) bool {
 	return false
 }
 
-// --- Helpers manquants ---
-
+// Helpers
 func validName(s string) bool {
 	if s == "" {
 		return false
@@ -222,6 +227,7 @@ func emptyOr(s string) string {
 	return s
 }
 
+// Inventaire
 func RemoveItem(c *Character, item string) bool {
 	for i, v := range c.Inventory {
 		if v == item {
@@ -232,6 +238,7 @@ func RemoveItem(c *Character, item string) bool {
 	return false
 }
 
+// Progression
 func GainExp(c *Character, exp int) {
 	c.Exp += exp
 	fmt.Printf("🔹 Vous gagnez %d XP (%d/%d)\n", exp, c.Exp, c.Level*100)
@@ -246,7 +253,7 @@ func GainExp(c *Character, exp int) {
 		c.CurrentMana = c.MaxMana
 		fmt.Printf("🎉 Niveau %d atteint ! PV=%d Mana=%d\n", c.Level, c.MaxHP, c.MaxMana)
 
-		// Apprentissage de sorts selon le niveau
+		// Débloque des sorts selon le niveau
 		switch c.Level {
 		case 3:
 			LearnSpell(c, "Boule de feu")
@@ -258,6 +265,7 @@ func GainExp(c *Character, exp int) {
 	}
 }
 
+// Améliorations
 func UpgradeInventory(c *Character) bool {
 	if c.InventoryUpgradeUses >= 3 {
 		return false
