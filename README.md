@@ -6,81 +6,109 @@
 
 ## Description
 
-**Veil of Souls** est un jeu de rôle (RPG) développé en Go, dans lequel le joueur crée un personnage, explore un donjon de 10 salles, combat des ennemis et améliore son équipement.  
-Ce projet est basé sur le **sujet RED** et couvre l’ensemble des fonctionnalités demandées.
+Veil of Souls est un RPG console dans lequel le joueur :
 
-### Fonctionnalités principales :
-- Création du personnage : nom, classe (Humain / Elfe / Nain), arme de départ  
-- Inventaire limité avec possibilité d’augmentation (+10 slots, max 3 fois)  
-- Objets : potions de vie / poison, ressources, équipements  
-- Marchand et forgeron pour acheter / fabriquer des objets  
-- Équipement (tête, torse, pieds) modifiant les PV max  
-- Exploration de 10 salles avec ennemis et sortie fermée tant que tous ne sont pas battus  
-- Combat tour par tour contre les monstres et un boss final  
-- Système d’expérience et montée en niveau (stats augmentées)  
-- Sauvegarde et chargement de la partie au format JSON  
+- Crée un personnage (nom, classe : Humain / Elfe / Nain)
+- Commence avec une arme de départ
+- Explore un donjon de **10 salles**, chacune peuplée de monstres
+- Ne peut sortir d’une salle tant que tous les ennemis ne sont pas vaincus
+- Astreint à combattre un boss final à la fin du donjon
+- Gagne de l’expérience, monte de niveau, améliore ses statistiques
+- Dispose d’un inventaire avec capacité limitée, pouvant être augmentée (max +10 cases, jusqu’à 3 fois)
+- Trouve / achète / fabrique des objets : potions, poisons, ressources, équipements
+- Équipe différents types d’armures (tête, torse, pieds), qui modifient les PV maximum
+- Peut interagir avec un marchand et un forgeron
+- Sauvegarde et charge la partie au format JSON
 
----
 
-## Structure du projet
 
+## 📂 Structure du projet
+
+```
 veilofsouls/
-│── go.mod
-│── main.go
-│
-├── intro/ # écran d’accueil
-├── character/ # gestion du personnage : stats, niveau, équipement
-├── inventory/ # usage des objets dans l’inventaire
-├── merchant/ # achat d’objets
-├── blacksmith/ # fabrication d’équipements
-├── mapgame/ # exploration des salles du donjon
-├── rooms/ # définition des salles (room1.go → room10.go)
-├── monster/ # définition des monstres (gobelins, boss…)
-├── combat/ # logique de combat tour par tour
-├── utils/ # fonctions utilitaires
-└── save/ # sauvegarde et chargement du jeu
+├── go.mod
+├── main.go
+├── intro/         # écran d’accueil
+├── character/     # stats, niveau, équipement du personnage
+├── inventory/     # gestion des objets, utilisation
+├── merchant/      # achat d’objets
+├── blacksmith/    # fabrication / amélioration d’équipements
+├── mapgame/       # exploration des salles du donjon
+├── rooms/         # définition des salles (room1.go → room10.go)
+├── monster/       # définition des monstres (gobelins, boss…)
+├── combat/        # logique de combat au tour par tour
+├── utils/         # fonctions utilitaires
+└── save/          # sauvegarde / chargement JSON
+```
 
 
----
 
-## Installation / Exécution
+## 🛠️ Prérequis / Installation
 
-1. Installer Go (>= 1.22 recommandé)  
-2. Cloner le dépôt :  
+- Go version **1.22** ou plus recommandée
+- Git (pour cloner le dépôt)
 
-   ```bash
-   git clone https://github.com/CorentinNKN/projet-red_Veil-of-Souls.git
-   cd projet-red_Veil-of-Souls
 
-## Lancer le jeu
 
+## 🚀 Lancer le jeu
+
+```bash
+git clone https://github.com/CorentinNKN/projet-red_Veil-of-Souls.git
+cd projet-red_Veil-of-Souls
 go run main.go
+```
 
-## Commandes dans le jeu
 
-Menus principaux : taper le numéro du choix
 
-Exploration dans le donjon :
+## 🎮 Commandes du jeu
 
-z → haut
+### Menus principaux
+- Entrer le numéro correspondant au choix voulu
 
-q → gauche
+### Exploration
+- `z` : aller en haut  
+- `q` : aller à gauche  
+- `s` : aller en bas  
+- `d` : aller à droite  
+- `i` : ouvrir l’inventaire  
+- `r` : quitter la salle
 
-s → bas
+### Combat
+- `1` : attaquer  
+- `2` : lancer une boule de feu (si disponible)  
+- `3` : fuir  
+> ⚠️ On ne peut pas quitter tant que les 10 salles du donjon ne sont pas toutes complétées.
 
-d → droite
 
-i → accéder à l’inventaire
 
-r → quitter la salle
+##  Progression et Fonctionnalités
 
-Combat :
+- Système de niveaux et expérience : augmente les stats du personnage à chaque niveau
+- Objets variés : consommables (potions de soins, potions de poisons), ressources, équipements
+- Équipements affectant la vie maximale selon l’équipement porté
+- Fabrication / amélioration via le forgeron
+- Sauvegarde / chargement via fichier JSON : permet de reprendre une partie
 
-1 → attaquer
 
-2 → lancer une boule de feu (si disponible)
 
-3 → fuir
+## À venir / Améliorations possibles
 
-⚠️ On ne peut pas quitter tant que les 10 salles ne sont pas terminées.
+- Ajouter des types de monstres plus variés
+- Ajouter des compétences ou sorts supplémentaires
+- Meilleure interface utilisateur (ASCII art, couleurs, etc.)
+- Ajouter un système de quêtes secondaires
+- Améliorer la sauvegarde pour gérer plusieurs parties
+- Équilibrer la difficulté (boss, progression des ennemis, etc.)
+
+
+
+## ✍️ Auteurs
+
+- Corentin NOKAYA 
+- Antoine MASSOUH
+- Souleymane SALL 
+
+
+Merci d’avoir regardé ce projet !  
+Merci d’avoir regardé ce projet !  
 
