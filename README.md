@@ -109,6 +109,5 @@ go run main.go
 - Souleymane SALL 
 
 
-Merci d’avoir regardé ce projet !  
-Merci d’avoir regardé ce projet !  
+Merci d’avoir regardé ce projet !   
 
