@@ -4,87 +4,85 @@ import (
 	"fmt"
 	"main/character"
 	"main/utils"
-	"strconv"
 	"strings"
-	"time"
 )
 
-// AccessInventory : affiche inventaire et permet d'utiliser/équiper/augmenter
+// AccessInventory permet au joueur de voir et gérer son inventaire
 func AccessInventory(c *character.Character) {
-	if len(c.Inventory) == 0 {
-		fmt.Println("Inventaire vide.")
+	for {
+		fmt.Println("\n=== Inventaire ===")
+		fmt.Printf("Contenu (%d/%d) : %v\n", len(c.Inventory), c.InventoryCapacity, c.Inventory)
+		fmt.Println("Options :")
+		fmt.Println("1. Utiliser une potion de vie (+50 PV)")
+		fmt.Println("2. Utiliser une potion de poison (10 dégâts/s pendant 3s)")
+		fmt.Println("3. Supprimer un objet")
+		fmt.Println("4. Utiliser un sort")
+		fmt.Println("5. Quitter l’inventaire")
+
+		choice := utils.AskChoice()
+
+		switch choice {
+		case "1":
+			character.UsePotion(c)
+		case "2":
+			character.UsePoisonPot(c)
+		case "3":
+			fmt.Print("Nom de l’objet à supprimer : ")
+			item := utils.AskChoice()
+			if !character.RemoveItem(c, item) {
+				fmt.Println("❌ Objet introuvable.")
+			} else {
+				fmt.Printf("🗑️ %s supprimé de l’inventaire.\n", item)
+			}
+		case "4":
+			useSpell(c)
+		case "5":
+			return
+		default:
+			fmt.Println("Choix invalide.")
+		}
+	}
+}
+
+// --- Sorts / compétences ---
+func useSpell(c *character.Character) {
+	if len(c.Skills) == 0 {
+		fmt.Println("❌ Vous n’avez appris aucun sort.")
 		return
 	}
 
-	fmt.Println("\n--- Inventaire ---")
-	for i, item := range c.Inventory {
-		fmt.Printf("%d. %s\n", i+1, item)
+	fmt.Println("\n=== Sorts disponibles ===")
+	for i, s := range c.Skills {
+		fmt.Printf("%d. %s\n", i+1, s)
 	}
-	fmt.Println("0. Retour")
-	fmt.Println("Choisissez un objet à utiliser/équiper (numéro) : ")
 
-	choiceStr := utils.AskChoice()
-	choice, err := strconv.Atoi(choiceStr)
-	if err != nil || choice < 0 || choice > len(c.Inventory) {
-		fmt.Println("Choix invalide.")
+	fmt.Print("Choisissez un sort : ")
+	choice := utils.AskChoice()
+
+	idx := -1
+	for i, s := range c.Skills {
+		if choice == fmt.Sprint(i+1) || strings.EqualFold(choice, s) {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		fmt.Println("❌ Choix invalide.")
 		return
 	}
-	if choice == 0 {
-		return
-	}
 
-	item := c.Inventory[choice-1]
-	lower := strings.ToLower(item)
-	// decide whether to remove item from inventory after use
-	removeItem := true
-
-	switch lower {
-	case "potion de vie":
-		character.Heal(c, 30)
-	case "potion de poison":
-		poisonPot(c)
-	case "augmentation d'inventaire":
-		upgradeInventorySlot(c)
-		// upgradeInventorySlot uses the Character state, but we must also allow removal below
-	case "chapeau de l'aventurier", "tunique de l'aventurier", "bottes de l'aventurier":
-		// Equip handles removing the item from inventory internally
-		character.Equip(c, item)
-		removeItem = false
+	spell := c.Skills[idx]
+	switch spell {
+	case "Coup de poing":
+		fmt.Println("👊 Vous donnez un coup de poing (8 dégâts).")
+	case "Boule de feu":
+		if c.CurrentMana < 10 {
+			fmt.Println("❌ Pas assez de mana (10 requis).")
+			return
+		}
+		c.CurrentMana -= 10
+		fmt.Println("🔥 Vous lancez une boule de feu (18 dégâts). Mana -10.")
 	default:
-		fmt.Println("Cet objet n'a aucun effet utilisable pour le moment.")
+		fmt.Printf("✨ Vous utilisez le sort : %s\n", spell)
 	}
-
-	if removeItem {
-		// retirer l'objet utilisé
-		if choice-1 >= 0 && choice-1 < len(c.Inventory) {
-			c.Inventory = append(c.Inventory[:choice-1], c.Inventory[choice:]...)
-		}
-	}
-}
-
-// poisonPot : inflige 10 PV/s pendant 3s, affiche PV à chaque tick
-func poisonPot(c *character.Character) {
-	fmt.Println("⚗️ Vous avez bu une Potion de Poison !")
-	for i := 1; i <= 3; i++ {
-		time.Sleep(1 * time.Second)
-		c.CurrentHP -= 10
-		if c.CurrentHP < 0 {
-			c.CurrentHP = 0
-		}
-		fmt.Printf("☠️ Seconde %d : %d/%d PV\n", i, c.CurrentHP, c.MaxHP)
-	}
-	if c.CurrentHP <= 0 {
-		character.IsDead(c)
-	}
-}
-
-// upgradeInventorySlot : augmente la capacité max de l'inventaire (+10) (max 3 fois)
-func upgradeInventorySlot(c *character.Character) {
-	if c.InventoryUpgrades >= 3 {
-		fmt.Println("❌ Vous ne pouvez plus augmenter l'inventaire.")
-		return
-	}
-	c.InventoryLimit += 10
-	c.InventoryUpgrades++
-	fmt.Printf("✔ Inventaire augmenté ! Nouvelle capacité : %d\n", c.InventoryLimit)
 }

@@ -4,197 +4,274 @@ import (
 	"fmt"
 	"main/utils"
 	"strings"
+	"time"
+	"unicode"
 )
 
-// Equipment : tête / torse / pieds
+// Equipment représente les emplacements d'équipement du personnage
 type Equipment struct {
 	Head  string
 	Torso string
 	Feet  string
 }
 
-// Character structure (exported)
+// Character contient toutes les infos du joueur
 type Character struct {
-	Name              string
-	Class             string
-	Weapon            string
-	Level             int
-	MaxHP             int
-	CurrentHP         int
-	Inventory         []string
-	Spell             string
-	Gold              int
-	Equipment         Equipment
-	InventoryLimit    int
-	InventoryUpgrades int
+	Name                 string
+	Class                string
+	Level                int
+	MaxHP                int
+	CurrentHP            int
+	MaxMana              int
+	CurrentMana          int
+	Inventory            []string
+	InventoryCapacity    int
+	InventoryUpgradeUses int // nombre de fois qu'on a augmenté l'inventaire (max 3)
+	Gold                 int
+	Skills               []string
+	Equipment            Equipment
+	Exp                  int
+	ExpMax               int
+	Initiative           int
 }
 
-// InitCharacter : constructeur
-func InitCharacter(name, class, weapon string, level, maxHP, currentHP int, inventory []string, spell string) Character {
-	return Character{
-		Name:              name,
-		Class:             class,
-		Weapon:            weapon,
-		Level:             level,
-		MaxHP:             maxHP,
-		CurrentHP:         currentHP,
-		Inventory:         inventory,
-		Spell:             spell,
-		Gold:              100,
-		Equipment:         Equipment{},
-		InventoryLimit:    10,
-		InventoryUpgrades: 0,
-	}
-}
-
-// CharacterCreation : permet à l'utilisateur de créer son perso
+// CharacterCreation : crée un personnage en demandant nom + classe à l'utilisateur
 func CharacterCreation() Character {
-	fmt.Println("\n--- Création du personnage ---")
+	fmt.Println("=== Création du personnage ===")
+	var name string
 
-	// Nom (lettres uniquement demandé implicitement)
-	fmt.Print("Choisissez un nom : ")
-	rawName := utils.AskChoice()
-	name := strings.Title(strings.ToLower(rawName))
-
-	// Classe
-	fmt.Println("Choisissez une classe : (1) Humain (100 PV), (2) Elfe (80 PV), (3) Nain (120 PV)")
-	classChoice := utils.AskChoice()
-
-	class := ""
-	maxHP := 100
-	switch classChoice {
-	case "1":
-		class = "Humain"
-		maxHP = 100
-	case "2":
-		class = "Elfe"
-		maxHP = 80
-	case "3":
-		class = "Nain"
-		maxHP = 120
-	default:
-		class = "Aventurier"
-		maxHP = 100
+	// Nom : uniquement des lettres, normalisé (Majuscule première lettre)
+	for {
+		fmt.Print("Entrez le nom du personnage (lettres uniquement) : ")
+		input := utils.AskChoice()
+		input = strings.TrimSpace(input)
+		if validName(input) {
+			name = normalizeName(input)
+			break
+		}
+		fmt.Println("Nom invalide : n'utilisez que des lettres.")
 	}
 
-	// Arme de départ
-	fmt.Println("Choisissez une arme : (1) Épée, (2) Arc, (3) Bâton")
-	weaponChoice := utils.AskChoice()
-	weapon := "Dague"
-	switch weaponChoice {
-	case "1":
-		weapon = "Epee"
-	case "2":
-		weapon = "Arc"
-	case "3":
-		weapon = "Baton"
+	// Classe : Humain, Elfe, Nain
+	fmt.Println("Choisissez une classe :")
+	fmt.Println("1. Humain (100 PV max)")
+	fmt.Println("2. Elfe  (80 PV max)")
+	fmt.Println("3. Nain  (120 PV max)")
+
+	var class string
+	var maxHP int
+	for {
+		choice := utils.AskChoice()
+		switch choice {
+		case "1", "Humain", "humain", "HUMAIN":
+			class = "Humain"
+			maxHP = 100
+		case "2", "Elfe", "elfe", "ELFE":
+			class = "Elfe"
+			maxHP = 80
+		case "3", "Nain", "nain", "NAIN":
+			class = "Nain"
+			maxHP = 120
+		default:
+			fmt.Println("Choix invalide, réessayez.")
+			continue
+		}
+		break
 	}
 
-	// PV de départ = 50% du max
-	currentHP := maxHP / 2
+	// Initialisation
+	level := 1
+	currentHP := maxHP / 2 // spawn à 50%
+	maxMana := maxHP / 4
+	if maxMana < 10 {
+		maxMana = 10
+	}
+	currentMana := maxMana
 
-	return InitCharacter(name, class, weapon, 1, maxHP, currentHP, []string{"Potion de Vie"}, "Coup de Poing")
+	inventory := []string{"Potion de vie", "Potion de vie", "Potion de vie"}
+	exp := 0
+	expMax := 100
+	gold := 100
+	skills := []string{"Coup de poing"}
+	initiative := 10
+
+	c := Character{
+		Name:                 name,
+		Class:                class,
+		Level:                level,
+		MaxHP:                maxHP,
+		CurrentHP:            currentHP,
+		MaxMana:              maxMana,
+		CurrentMana:          currentMana,
+		Inventory:            inventory,
+		InventoryCapacity:    10,
+		InventoryUpgradeUses: 0,
+		Gold:                 gold,
+		Skills:               skills,
+		Equipment:            Equipment{},
+		Exp:                  exp,
+		ExpMax:               expMax,
+		Initiative:           initiative,
+	}
+
+	fmt.Printf("\nPersonnage créé : %s (%s) - Niveau %d\n", c.Name, c.Class, c.Level)
+	fmt.Printf("PV : %d/%d | Mana : %d/%d | Or : %d\n", c.CurrentHP, c.MaxHP, c.CurrentMana, c.MaxMana, c.Gold)
+	return c
 }
 
-// DisplayInfo : affiche les infos complètes du personnage
+// DisplayInfo affiche les infos principales du personnage
 func DisplayInfo(c *Character) {
-	fmt.Printf("\n--- Infos Personnage ---\n")
-	fmt.Printf("Nom : %s\nClasse : %s\nArme : %s\nNiveau : %d\nPV : %d/%d\nOr : %d\nInventaire (%d/%d) : %v\nSort : %s\n",
-		c.Name, c.Class, c.Weapon, c.Level, c.CurrentHP, c.MaxHP, c.Gold, len(c.Inventory), c.InventoryLimit, c.Inventory, c.Spell)
-
-	fmt.Println("Équipement :")
-	if c.Equipment.Head != "" {
-		fmt.Println(" - Tête :", c.Equipment.Head)
-	}
-	if c.Equipment.Torso != "" {
-		fmt.Println(" - Torse :", c.Equipment.Torso)
-	}
-	if c.Equipment.Feet != "" {
-		fmt.Println(" - Pieds :", c.Equipment.Feet)
-	}
+	fmt.Println("\n=== Informations du personnage ===")
+	fmt.Printf("Nom : %s\n", c.Name)
+	fmt.Printf("Classe : %s\n", c.Class)
+	fmt.Printf("Niveau : %d\n", c.Level)
+	fmt.Printf("PV : %d / %d\n", c.CurrentHP, c.MaxHP)
+	fmt.Printf("Mana : %d / %d\n", c.CurrentMana, c.MaxMana)
+	fmt.Printf("Exp : %d / %d\n", c.Exp, c.ExpMax)
+	fmt.Printf("Or : %d\n", c.Gold)
+	fmt.Printf("Inventaire (%d/%d) : %v\n", len(c.Inventory), c.InventoryCapacity, c.Inventory)
+	fmt.Printf("Equipement : Tête=%s Torse=%s Pieds=%s\n", emptyOr(c.Equipment.Head), emptyOr(c.Equipment.Torso), emptyOr(c.Equipment.Feet))
+	fmt.Printf("Sorts appris : %v\n", c.Skills)
+	fmt.Printf("Initiative : %d\n", c.Initiative)
 }
 
-// Equip : équipe un objet (met à jour les PV max)
-func Equip(c *Character, item string) {
-	switch item {
-	case "Chapeau de l'aventurier":
-		replaceEquipment(&c.Equipment.Head, item, c, 10)
-	case "Tunique de l'aventurier":
-		replaceEquipment(&c.Equipment.Torso, item, c, 25)
-	case "Bottes de l'aventurier":
-		replaceEquipment(&c.Equipment.Feet, item, c, 15)
-	default:
-		fmt.Println("❌ Cet objet ne peut pas être équipé.")
-		return
-	}
-	fmt.Printf("✔ Vous avez équipé %s.\n", item)
-}
-
-// helper : bonus d'un équipement (par nom)
-func equipmentBonus(name string) int {
-	switch name {
-	case "Chapeau de l'aventurier":
-		return 10
-	case "Tunique de l'aventurier":
-		return 25
-	case "Bottes de l'aventurier":
-		return 15
-	default:
-		return 0
-	}
-}
-
-// replaceEquipment : remplace un équipement dans un slot, rend l'ancien dans l'inventaire
-func replaceEquipment(slot *string, newItem string, c *Character, bonus int) {
-	// si slot occupé -> retirer bonus et remettre l'objet dans inventaire
-	if *slot != "" {
-		old := *slot
-		c.MaxHP -= equipmentBonus(old)
-		// remise dans inventaire (si place)
-		if len(c.Inventory) < c.InventoryLimit {
-			c.Inventory = append(c.Inventory, old)
-		} else {
-			// si pas de place, détruire (ou drop) — message
-			fmt.Println("⚠️ Pas de place pour récupérer l'ancien équipement ; il est perdu.")
-		}
-	}
-	// mettre le nouvel équipement
-	*slot = newItem
-	// enlever le nouvel équipement de l'inventaire (s'il y est)
-	removeItemFromInventory(c, newItem)
-	// appliquer bonus
-	c.MaxHP += bonus
-	// s'assurer que CurrentHP <= MaxHP
-	if c.CurrentHP > c.MaxHP {
-		c.CurrentHP = c.MaxHP
-	}
-}
-
-// removeItemFromInventory : retire 1 exemplaire d'un item si présent
-func removeItemFromInventory(c *Character, item string) {
-	for i, v := range c.Inventory {
-		if v == item {
-			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
-			return
-		}
-	}
-}
-
-// Heal : soigne
-func Heal(c *Character, amount int) {
-	c.CurrentHP += amount
-	if c.CurrentHP > c.MaxHP {
-		c.CurrentHP = c.MaxHP
-	}
-	fmt.Printf("Vous récupérez %d PV. (%d/%d)\n", amount, c.CurrentHP, c.MaxHP)
-}
-
-// IsDead : vérifie si mort et ressuscite à 50% du max
+// IsDead vérifie si le joueur est à 0 PV ou moins
 func IsDead(c *Character) bool {
 	if c.CurrentHP <= 0 {
-		fmt.Println("💀 Vous êtes mort... ressuscitation automatique (50% PV max).")
 		c.CurrentHP = c.MaxHP / 2
+		if c.CurrentMana < c.MaxMana/2 {
+			c.CurrentMana = c.MaxMana / 2
+		}
+		fmt.Printf("💀 %s est mort, mais est ressuscité à %d/%d PV.\n", c.Name, c.CurrentHP, c.MaxHP)
 		return true
 	}
 	return false
+}
+
+// UsePotion : potion de vie +50 PV
+func UsePotion(c *Character) bool {
+	for i, item := range c.Inventory {
+		if strings.ToLower(item) == "potion de vie" || strings.ToLower(item) == "potion" {
+			heal := 50
+			c.CurrentHP += heal
+			if c.CurrentHP > c.MaxHP {
+				c.CurrentHP = c.MaxHP
+			}
+			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
+			fmt.Printf("🍷 Vous buvez une potion et regagnez %d PV (%d/%d).\n", heal, c.CurrentHP, c.MaxHP)
+			return true
+		}
+	}
+	fmt.Println("❌ Aucune potion de vie dans l'inventaire.")
+	return false
+}
+
+// UsePoisonPot : inflige 10 dégâts/s pendant 3s
+func UsePoisonPot(c *Character) bool {
+	for i, item := range c.Inventory {
+		if strings.ToLower(item) == "potion de poison" || strings.ToLower(item) == "poison" {
+			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
+			fmt.Println("☠️ Vous avez utilisé une potion de poison (10 dégâts/s pendant 3s).")
+			for t := 1; t <= 3; t++ {
+				c.CurrentHP -= 10
+				if c.CurrentHP < 0 {
+					c.CurrentHP = 0
+				}
+				fmt.Printf("Dégâts de poison %ds : PV %d/%d\n", t, c.CurrentHP, c.MaxHP)
+				time.Sleep(1 * time.Second)
+				if IsDead(c) {
+					break
+				}
+			}
+			return true
+		}
+	}
+	fmt.Println("❌ Aucune potion de poison dans l'inventaire.")
+	return false
+}
+
+// --- Helpers manquants ---
+
+func validName(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if !unicode.IsLetter(r) && r != ' ' && r != '-' {
+			return false
+		}
+	}
+	return true
+}
+
+func normalizeName(s string) string {
+	s = strings.TrimSpace(s)
+	parts := strings.Fields(s)
+	for i, p := range parts {
+		runes := []rune(strings.ToLower(p))
+		runes[0] = unicode.ToUpper(runes[0])
+		parts[i] = string(runes)
+	}
+	return strings.Join(parts, " ")
+}
+
+func emptyOr(s string) string {
+	if s == "" {
+		return "aucun"
+	}
+	return s
+}
+
+func RemoveItem(c *Character, item string) bool {
+	for i, v := range c.Inventory {
+		if v == item {
+			c.Inventory = append(c.Inventory[:i], c.Inventory[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
+func GainExp(c *Character, exp int) {
+	c.Exp += exp
+	// Level up every 100 exp points
+	if c.Exp >= c.Level*100 {
+		c.Level++
+		c.MaxHP += 10
+		c.CurrentHP = c.MaxHP
+		c.MaxMana += 5
+		c.CurrentMana = c.MaxMana
+		fmt.Printf("Level up! You are now level %d\n", c.Level)
+	}
+}
+
+func UpgradeInventory(c *Character) bool {
+	if c.InventoryUpgradeUses >= 3 {
+		return false
+	}
+	c.InventoryCapacity += 10
+	c.InventoryUpgradeUses++
+	return true
+}
+
+func AddItem(c *Character, item string) bool {
+	if len(c.Inventory) >= c.InventoryCapacity {
+		fmt.Println("❌ Inventaire plein.")
+		return false
+	}
+	c.Inventory = append(c.Inventory, item)
+	fmt.Printf("✅ %s ajouté à l'inventaire.\n", item)
+	return true
+}
+
+func LearnSpell(c *Character, spell string) bool {
+	for _, s := range c.Skills {
+		if s == spell {
+			fmt.Println("❌ Sort déjà connu.")
+			return false
+		}
+	}
+	c.Skills = append(c.Skills, spell)
+	fmt.Printf("✅ Sort %s appris.\n", spell)
+	return true
 }

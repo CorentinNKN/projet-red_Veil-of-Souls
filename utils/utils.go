@@ -4,26 +4,25 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
+	"time"
 )
 
-// Lit une ligne depuis stdin et la trim
+// AskChoice lit une entrée clavier (trim + toLower) pour uniformiser
 func AskChoice() string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("> ")
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
 }
 
-// Lit un choix numérique entre 1 et max (boucle tant que invalide)
-func AskChoiceIndex(max int) int {
-	for {
-		s := AskChoice()
-		n, err := strconv.Atoi(s)
-		if err == nil && n >= 1 && n <= max {
-			return n
-		}
-		fmt.Println("❌ Choix invalide.")
-	}
+// SleepSeconds fait une pause de X secondes
+func SleepSeconds(sec int) {
+	time.Sleep(time.Duration(sec) * time.Second)
+}
+
+// Pause attend que l'utilisateur appuie sur Entrée (utile après un combat ou un écran de victoire)
+func Pause() {
+	fmt.Println("\nAppuyez sur Entrée pour continuer...")
+	reader := bufio.NewReader(os.Stdin)
+	_, _ = reader.ReadString('\n')
 }
